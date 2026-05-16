@@ -34,7 +34,6 @@ mainFrame.Parent = screenGui
 
 -- Permitir arrastar painel
 local panelDragging = false
-local panelDragInput
 local panelDragStart
 local panelStartPos
 
@@ -93,7 +92,7 @@ end)
 
 -- Label Velocidade
 local speedLabel = Instance.new("TextLabel")
-speedLabel.Size = UDim2.new(1, 0, 0, 20)
+speedLabel.Size = UDim2.new(1, -20, 0, 20)
 speedLabel.Position = UDim2.new(0, 10, 0, 40)
 speedLabel.BackgroundTransparency = 1
 speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -103,49 +102,50 @@ speedLabel.TextXAlignment = Enum.TextXAlignment.Left
 speedLabel.Text = "🚀 Velocidade: 1.0x"
 speedLabel.Parent = mainFrame
 
--- Slider Velocidade (Background)
+-- Container Slider Velocidade
+local speedSliderContainer = Instance.new("Frame")
+speedSliderContainer.Size = UDim2.new(0, 280, 0, 20)
+speedSliderContainer.Position = UDim2.new(0, 10, 0, 60)
+speedSliderContainer.BackgroundTransparency = 1
+speedSliderContainer.Parent = mainFrame
+
+-- Fundo Slider Velocidade
 local speedSlider = Instance.new("Frame")
-speedSlider.Size = UDim2.new(0, 280, 0, 10)
-speedSlider.Position = UDim2.new(0, 10, 0, 65)
+speedSlider.Size = UDim2.new(1, 0, 0, 8)
+speedSlider.Position = UDim2.new(0, 0, 0.5, -4)
 speedSlider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 speedSlider.BorderColor3 = Color3.fromRGB(255, 0, 0)
 speedSlider.BorderSizePixel = 1
-speedSlider.Parent = mainFrame
+speedSlider.Parent = speedSliderContainer
 
--- Barra de Velocidade (Fill)
-local speedFill = Instance.new("Frame")
-speedFill.Size = UDim2.new(0, 0, 1, 0)
-speedFill.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-speedFill.BorderSizePixel = 0
-speedFill.Parent = speedSlider
-
--- Botão do Slider de Velocidade
+-- Botão Slider Velocidade
 local speedButton = Instance.new("TextButton")
-speedButton.Size = UDim2.new(0, 15, 0, 15)
-speedButton.Position = UDim2.new(0, -7, 0.5, -7)
+speedButton.Size = UDim2.new(0, 16, 0, 16)
+speedButton.Position = UDim2.new(0, 0, 0.5, -8)
 speedButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-speedButton.BorderSizePixel = 2
 speedButton.BorderColor3 = Color3.fromRGB(255, 255, 255)
+speedButton.BorderSizePixel = 2
 speedButton.Text = ""
-speedButton.Parent = speedSlider
-speedButton.ZIndex = 2
+speedButton.Parent = speedSliderContainer
+speedButton.ZIndex = 10
+
+-- Função Atualizar Velocidade
+local function updateSpeed(percent)
+    percent = math.clamp(percent, 0, 1)
+    speedMultiplier = 1 + (percent * 5)
+    speedButton.Position = UDim2.new(percent, -8, 0.5, -8)
+    speedLabel.Text = "🚀 Velocidade: " .. string.format("%.1f", speedMultiplier) .. "x"
+end
 
 -- Evento Velocidade
 speedButton.MouseButton1Down:Connect(function()
     dragSpeed = true
 end)
 
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragSpeed = false
-        dragJump = false
-    end
-end)
-
 -- Label Pulo
 local jumpLabel = Instance.new("TextLabel")
-jumpLabel.Size = UDim2.new(1, 0, 0, 20)
-jumpLabel.Position = UDim2.new(0, 10, 0, 90)
+jumpLabel.Size = UDim2.new(1, -20, 0, 20)
+jumpLabel.Position = UDim2.new(0, 10, 0, 100)
 jumpLabel.BackgroundTransparency = 1
 jumpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 jumpLabel.TextSize = 12
@@ -154,77 +154,85 @@ jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
 jumpLabel.Text = "⬆️ Pulo: 1.0x"
 jumpLabel.Parent = mainFrame
 
--- Slider Pulo (Background)
+-- Container Slider Pulo
+local jumpSliderContainer = Instance.new("Frame")
+jumpSliderContainer.Size = UDim2.new(0, 280, 0, 20)
+jumpSliderContainer.Position = UDim2.new(0, 10, 0, 120)
+jumpSliderContainer.BackgroundTransparency = 1
+jumpSliderContainer.Parent = mainFrame
+
+-- Fundo Slider Pulo
 local jumpSlider = Instance.new("Frame")
-jumpSlider.Size = UDim2.new(0, 280, 0, 10)
-jumpSlider.Position = UDim2.new(0, 10, 0, 115)
+jumpSlider.Size = UDim2.new(1, 0, 0, 8)
+jumpSlider.Position = UDim2.new(0, 0, 0.5, -4)
 jumpSlider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 jumpSlider.BorderColor3 = Color3.fromRGB(255, 0, 0)
 jumpSlider.BorderSizePixel = 1
-jumpSlider.Parent = mainFrame
+jumpSlider.Parent = jumpSliderContainer
 
--- Barra de Pulo (Fill)
-local jumpFill = Instance.new("Frame")
-jumpFill.Size = UDim2.new(0, 0, 1, 0)
-jumpFill.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-jumpFill.BorderSizePixel = 0
-jumpFill.Parent = jumpSlider
-
--- Botão do Slider de Pulo
+-- Botão Slider Pulo
 local jumpButton = Instance.new("TextButton")
-jumpButton.Size = UDim2.new(0, 15, 0, 15)
-jumpButton.Position = UDim2.new(0, -7, 0.5, -7)
+jumpButton.Size = UDim2.new(0, 16, 0, 16)
+jumpButton.Position = UDim2.new(0, 0, 0.5, -8)
 jumpButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-jumpButton.BorderSizePixel = 2
 jumpButton.BorderColor3 = Color3.fromRGB(255, 255, 255)
+jumpButton.BorderSizePixel = 2
 jumpButton.Text = ""
-jumpButton.Parent = jumpSlider
-jumpButton.ZIndex = 2
+jumpButton.Parent = jumpSliderContainer
+jumpButton.ZIndex = 10
+
+-- Função Atualizar Pulo
+local function updateJump(percent)
+    percent = math.clamp(percent, 0, 1)
+    jumpMultiplier = 1 + (percent * 4)
+    jumpButton.Position = UDim2.new(percent, -8, 0.5, -8)
+    jumpLabel.Text = "⬆️ Pulo: " .. string.format("%.1f", jumpMultiplier) .. "x"
+end
 
 -- Evento Pulo
 jumpButton.MouseButton1Down:Connect(function()
     dragJump = true
 end)
 
--- Update Sliders no Mouse Move
+-- Soltar Mouse
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragSpeed = false
+        dragJump = false
+    end
+end)
+
+-- Atualizar Sliders ao Mover Mouse
 UserInputService.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement then
         if dragSpeed then
             local mousePos = UserInputService:GetMouseLocation().X
             local sliderPos = speedSlider.AbsolutePosition.X
             local sliderSize = speedSlider.AbsoluteSize.X
-            local percent = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
-            
-            speedMultiplier = 1 + (percent * 5)
-            speedButton.Position = UDim2.new(percent, -7, 0.5, -7)
-            speedFill.Size = UDim2.new(percent, 0, 1, 0)
-            speedLabel.Text = "🚀 Velocidade: " .. string.format("%.1f", speedMultiplier) .. "x"
+            local percent = (mousePos - sliderPos) / sliderSize
+            updateSpeed(percent)
         end
         
         if dragJump then
             local mousePos = UserInputService:GetMouseLocation().X
             local sliderPos = jumpSlider.AbsolutePosition.X
             local sliderSize = jumpSlider.AbsoluteSize.X
-            local percent = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
-            
-            jumpMultiplier = 1 + (percent * 4)
-            jumpButton.Position = UDim2.new(percent, -7, 0.5, -7)
-            jumpFill.Size = UDim2.new(percent, 0, 1, 0)
-            jumpLabel.Text = "⬆️ Pulo: " .. string.format("%.1f", jumpMultiplier) .. "x"
+            local percent = (mousePos - sliderPos) / sliderSize
+            updateJump(percent)
         end
     end
 end)
 
 -- Info
 local infoLabel = Instance.new("TextLabel")
-infoLabel.Size = UDim2.new(1, -20, 0, 60)
-infoLabel.Position = UDim2.new(0, 10, 0, 150)
+infoLabel.Size = UDim2.new(1, -20, 0, 50)
+infoLabel.Position = UDim2.new(0, 10, 0, 170)
 infoLabel.BackgroundTransparency = 1
 infoLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-infoLabel.TextSize = 11
+infoLabel.TextSize = 10
 infoLabel.Font = Enum.Font.Gotham
 infoLabel.TextWrapped = true
-infoLabel.Text = "📌 Arraste o painel\n🚀 Velocidade: 1-6x\n⬆️ Pulo: 1-5x\nK = Minimizar"
+infoLabel.Text = "📌 Arraste painel\n🚀 1-6x | ⬆️ 1-5x\nK = Minimizar"
 infoLabel.Parent = mainFrame
 
 -- Atalho K
@@ -255,4 +263,8 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-print("✓ MT SCRIPT ATIVADO!")
+-- Inicializar
+updateSpeed(0)
+updateJump(0)
+
+print("✓ MT SCRIPT ATIVADO - ARRASTE OS BOTÕES!")
