@@ -128,12 +128,29 @@ speedButton.Parent = speedSlider
 -- Variável para arrastar speed
 local dragSpeedBtn = false
 
-speedButton.MouseButton1Down:Connect(function()
-    dragSpeedBtn = true
+speedButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        dragSpeedBtn = true
+    end
 end)
 
-speedButton.MouseButton1Up:Connect(function()
-    dragSpeedBtn = false
+speedButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        dragSpeedBtn = false
+    end
+end)
+
+speedButton.InputChanged:Connect(function(input)
+    if dragSpeedBtn and input.UserInputType == Enum.UserInputType.Touch then
+        local touchX = input.Position.X
+        local sliderX = speedSlider.AbsolutePosition.X
+        local sliderW = speedSlider.AbsoluteSize.X
+        local percent = math.clamp((touchX - sliderX) / sliderW, 0, 1)
+        
+        speedMultiplier = 1 + (percent * 5)
+        speedButton.Position = UDim2.new(percent, -9, 0.5, -9)
+        speedLabel.Text = "🚀 Velocidade: " .. string.format("%.1f", speedMultiplier) .. "x"
+    end
 end)
 
 -- Label Pulo
@@ -171,41 +188,33 @@ jumpButton.Parent = jumpSlider
 -- Variável para arrastar jump
 local dragJumpBtn = false
 
-jumpButton.MouseButton1Down:Connect(function()
-    dragJumpBtn = true
-end)
-
-jumpButton.MouseButton1Up:Connect(function()
-    dragJumpBtn = false
-end)
-
--- Update Speed e Jump
-RunService.RenderStepped:Connect(function()
-    -- VELOCIDADE
-    if dragSpeedBtn then
-        local mouseX = UserInputService:GetMouseLocation().X
-        local sliderX = speedSlider.AbsolutePosition.X
-        local sliderW = speedSlider.AbsoluteSize.X
-        local percent = math.clamp((mouseX - sliderX) / sliderW, 0, 1)
-        
-        speedMultiplier = 1 + (percent * 5)
-        speedButton.Position = UDim2.new(percent, -9, 0.5, -9)
-        speedLabel.Text = "🚀 Velocidade: " .. string.format("%.1f", speedMultiplier) .. "x"
+jumpButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        dragJumpBtn = true
     end
-    
-    -- PULO
-    if dragJumpBtn then
-        local mouseX = UserInputService:GetMouseLocation().X
+end)
+
+jumpButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        dragJumpBtn = false
+    end
+end)
+
+jumpButton.InputChanged:Connect(function(input)
+    if dragJumpBtn and input.UserInputType == Enum.UserInputType.Touch then
+        local touchX = input.Position.X
         local sliderX = jumpSlider.AbsolutePosition.X
         local sliderW = jumpSlider.AbsoluteSize.X
-        local percent = math.clamp((mouseX - sliderX) / sliderW, 0, 1)
+        local percent = math.clamp((touchX - sliderX) / sliderW, 0, 1)
         
         jumpMultiplier = 1 + (percent * 4)
         jumpButton.Position = UDim2.new(percent, -9, 0.5, -9)
         jumpLabel.Text = "⬆️ Pulo: " .. string.format("%.1f", jumpMultiplier) .. "x"
     end
-    
-    -- APLICAR VELOCIDADE E PULO NO JOGO
+end)
+
+-- Update Game
+RunService.RenderStepped:Connect(function()
     if character and character.Parent then
         humanoid.JumpHeight = 7.2 * jumpMultiplier
         local moveDir = humanoid.MoveDirection
@@ -244,5 +253,5 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
-print("✅ MT SCRIPT CARREGADO!")
-print("👆 Arraste os botões de velocidade e pulo!")
+print("✅ MT SCRIPT CARREGADO (MOBILE)!")
+print("👆 Use TOQUE para arrastar!")
