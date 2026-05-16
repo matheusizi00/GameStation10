@@ -1,260 +1,428 @@
+-- ============================================
+-- ROBLOX FPS GAME COM ESP E HEALTH
+-- ============================================
+
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local humanoid = character:WaitForChild("Humanoid")
-local rootPart = character:WaitForChild("HumanoidRootPart")
 
-local speedMultiplier = 1
-local jumpMultiplier = 1
-local isMinimized = false
+-- ============================================
+-- CONFIGURAÇÕES
+-- ============================================
 
--- BodyVelocity
-local bodyVelocity = Instance.new("BodyVelocity")
-bodyVelocity.MaxForce = Vector3.new(math.huge, 0, math.huge)
-bodyVelocity.Parent = rootPart
-
--- GUI
-local screenGui = Instance.new("ScreenGui")
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
-
--- Painel Principal
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 300, 0, 260)
-mainFrame.Position = UDim2.new(0, 20, 0, 20)
-mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-mainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
-mainFrame.BorderSizePixel = 3
-mainFrame.Parent = screenGui
-
--- Título (Arrastável)
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-title.TextColor3 = Color3.fromRGB(0, 0, 0)
-title.TextSize = 16
-title.Font = Enum.Font.GothamBold
-title.Text = "🔴 MT SCRIPT 🔴"
-title.Parent = mainFrame
-
--- Variáveis para arrastar painel
-local panelDragging = false
-local panelDragStartPos = nil
-local panelStartPos = nil
-
-title.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        panelDragging = true
-        panelDragStartPos = input.Position
-        panelStartPos = mainFrame.Position
-    end
-end)
-
-title.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        panelDragging = false
-    end
-end)
-
-title.InputChanged:Connect(function(input)
-    if panelDragging and input.UserInputType == Enum.UserInputType.Touch then
-        local delta = input.Position - panelDragStartPos
-        mainFrame.Position = UDim2.new(
-            panelStartPos.X.Scale,
-            panelStartPos.X.Offset + delta.X,
-            panelStartPos.Y.Scale,
-            panelStartPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
--- Botão Minimizar
-local minimizeBtn = Instance.new("TextButton")
-minimizeBtn.Size = UDim2.new(0, 35, 0, 35)
-minimizeBtn.Position = UDim2.new(1, -40, 0.5, -17)
-minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-minimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-minimizeBtn.TextSize = 16
-minimizeBtn.Font = Enum.Font.GothamBold
-minimizeBtn.Text = "−"
-minimizeBtn.Parent = title
-
-minimizeBtn.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-        mainFrame.Size = UDim2.new(0, 300, 0, 40)
-        minimizeBtn.Text = "+"
-    else
-        mainFrame.Size = UDim2.new(0, 300, 0, 260)
-        minimizeBtn.Text = "−"
-    end
-end)
-
--- Label Velocidade
-local speedLabel = Instance.new("TextLabel")
-speedLabel.Size = UDim2.new(1, -20, 0, 20)
-speedLabel.Position = UDim2.new(0, 10, 0, 50)
-speedLabel.BackgroundTransparency = 1
-speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedLabel.TextSize = 13
-speedLabel.Font = Enum.Font.GothamBold
-speedLabel.TextXAlignment = Enum.TextXAlignment.Left
-speedLabel.Text = "🚀 Velocidade: 1.0x"
-speedLabel.Parent = mainFrame
-
--- Slider Velocidade
-local speedSlider = Instance.new("Frame")
-speedSlider.Size = UDim2.new(0, 280, 0, 12)
-speedSlider.Position = UDim2.new(0, 10, 0, 75)
-speedSlider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-speedSlider.BorderColor3 = Color3.fromRGB(255, 0, 0)
-speedSlider.BorderSizePixel = 2
-speedSlider.Parent = mainFrame
-
--- Botão Speed
-local speedButton = Instance.new("TextButton")
-speedButton.Size = UDim2.new(0, 18, 0, 18)
-speedButton.Position = UDim2.new(0, -3, 0.5, -9)
-speedButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-speedButton.BorderColor3 = Color3.fromRGB(255, 255, 255)
-speedButton.BorderSizePixel = 2
-speedButton.Text = ""
-speedButton.ZIndex = 100
-speedButton.Parent = speedSlider
-
--- Variável para arrastar speed
-local dragSpeedBtn = false
-local speedStartX = 0
-
-speedButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        dragSpeedBtn = true
-        speedStartX = input.Position.X
-    end
-end)
-
-speedButton.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        dragSpeedBtn = false
-    end
-end)
-
--- Label Pulo
-local jumpLabel = Instance.new("TextLabel")
-jumpLabel.Size = UDim2.new(1, -20, 0, 20)
-jumpLabel.Position = UDim2.new(0, 10, 0, 105)
-jumpLabel.BackgroundTransparency = 1
-jumpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-jumpLabel.TextSize = 13
-jumpLabel.Font = Enum.Font.GothamBold
-jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
-jumpLabel.Text = "⬆️ Pulo: 1.0x"
-jumpLabel.Parent = mainFrame
-
--- Slider Pulo
-local jumpSlider = Instance.new("Frame")
-jumpSlider.Size = UDim2.new(0, 280, 0, 12)
-jumpSlider.Position = UDim2.new(0, 10, 0, 130)
-jumpSlider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-jumpSlider.BorderColor3 = Color3.fromRGB(255, 0, 0)
-jumpSlider.BorderSizePixel = 2
-jumpSlider.Parent = mainFrame
-
--- Botão Jump
-local jumpButton = Instance.new("TextButton")
-jumpButton.Size = UDim2.new(0, 18, 0, 18)
-jumpButton.Position = UDim2.new(0, -3, 0.5, -9)
-jumpButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-jumpButton.BorderColor3 = Color3.fromRGB(255, 255, 255)
-jumpButton.BorderSizePixel = 2
-jumpButton.Text = ""
-jumpButton.ZIndex = 100
-jumpButton.Parent = jumpSlider
-
--- Variável para arrastar jump
-local dragJumpBtn = false
-local jumpStartX = 0
-
-jumpButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        dragJumpBtn = true
-        jumpStartX = input.Position.X
-    end
-end)
-
-jumpButton.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        dragJumpBtn = false
-    end
-end)
-
--- Update Game CONTÍNUO
-RunService.RenderStepped:Connect(function()
-    -- VELOCIDADE
-    if dragSpeedBtn then
-        local currentX = UserInputService:GetMouseLocation().X
-        local sliderX = speedSlider.AbsolutePosition.X
-        local sliderW = speedSlider.AbsoluteSize.X
-        local percent = math.clamp((currentX - sliderX) / sliderW, 0, 1)
-        
-        speedMultiplier = 1 + (percent * 5)
-        speedButton.Position = UDim2.new(percent, -9, 0.5, -9)
-        speedLabel.Text = "🚀 Velocidade: " .. string.format("%.1f", speedMultiplier) .. "x"
-    end
+local CONFIG = {
+    -- Movimento
+    moveSpeed = 20,
+    sprintSpeed = 30,
+    jumpPower = 50,
     
-    -- PULO
-    if dragJumpBtn then
-        local currentX = UserInputService:GetMouseLocation().X
-        local sliderX = jumpSlider.AbsolutePosition.X
-        local sliderW = jumpSlider.AbsoluteSize.X
-        local percent = math.clamp((currentX - sliderX) / sliderW, 0, 1)
-        
-        jumpMultiplier = 1 + (percent * 4)
-        jumpButton.Position = UDim2.new(percent, -9, 0.5, -9)
-        jumpLabel.Text = "⬆️ Pulo: " .. string.format("%.1f", jumpMultiplier) .. "x"
-    end
+    -- Câmera
+    mouseSensitivity = 0.003,
+    fov = 70,
     
-    -- APLICAR NO JOGO
-    if character and character.Parent then
-        humanoid.JumpHeight = 7.2 * jumpMultiplier
-        local moveDir = humanoid.MoveDirection
-        if moveDir.Magnitude > 0 then
-            bodyVelocity.Velocity = moveDir * (16 * speedMultiplier)
+    -- Arma
+    fireRate = 0.1,
+    bulletDamage = 25,
+    bulletSpeed = 100,
+    maxAmmo = 30,
+    currentAmmo = 30,
+    
+    -- ESP
+    espEnabled = true,
+    espDistance = 500,
+    showHealth = true,
+    showNames = true,
+    espColor = Color3.fromRGB(0, 255, 0),
+    enemyColor = Color3.fromRGB(255, 0, 0),
+}
+
+-- ============================================
+-- VARIÁVEIS GLOBAIS
+-- ============================================
+
+local camera = workspace.CurrentCamera
+local mouse = player:GetMouse()
+local isAiming = false
+local isSprinting = false
+local canFire = true
+local mouseDown = false
+local espPlayers = {}
+
+-- ============================================
+-- SETUP CÂMERA
+-- ============================================
+
+camera.FieldOfView = CONFIG.fov
+
+-- ============================================
+-- SISTEMA DE ESP
+-- ============================================
+
+local function createESPBox(targetPlayer)
+    if targetPlayer == player then return end
+    if not targetPlayer.Character then return end
+    
+    local targetHumanoid = targetPlayer.Character:FindFirstChild("Humanoid")
+    if not targetHumanoid then return end
+    
+    -- Criar container para ESP
+    local espContainer = Instance.new("BillboardGui")
+    espContainer.Name = "ESP_" .. targetPlayer.Name
+    espContainer.Size = UDim2.new(4, 0, 5, 0)
+    espContainer.MaxDistance = CONFIG.espDistance
+    espContainer.Adornee = targetPlayer.Character:FindFirstChild("Head")
+    
+    -- CAIXA DO PERSONAGEM
+    local boxFrame = Instance.new("Frame")
+    boxFrame.Name = "Box"
+    boxFrame.Size = UDim2.new(1, 0, 1, 0)
+    boxFrame.BackgroundTransparency = 1
+    boxFrame.BorderSizePixel = 2
+    boxFrame.BorderColor3 = CONFIG.enemyColor
+    boxFrame.Parent = espContainer
+    
+    -- NOME DO JOGADOR
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Name = "NameLabel"
+    nameLabel.Size = UDim2.new(1, 0, 0.15, 0)
+    nameLabel.Position = UDim2.new(0, 0, -0.2, 0)
+    nameLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    nameLabel.BackgroundTransparency = 0.5
+    nameLabel.TextColor3 = CONFIG.enemyColor
+    nameLabel.TextSize = 14
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.Text = targetPlayer.Name
+    nameLabel.Parent = espContainer
+    
+    -- BARRA DE VIDA
+    local healthBarBg = Instance.new("Frame")
+    healthBarBg.Name = "HealthBarBg"
+    healthBarBg.Size = UDim2.new(0.15, 0, 1, 0)
+    healthBarBg.Position = UDim2.new(-0.25, 0, 0, 0)
+    healthBarBg.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    healthBarBg.BorderSizePixel = 1
+    healthBarBg.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    healthBarBg.Parent = espContainer
+    
+    local healthBar = Instance.new("Frame")
+    healthBar.Name = "HealthBar"
+    healthBar.Size = UDim2.new(1, 0, 1, 0)
+    healthBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    healthBar.BorderSizePixel = 0
+    healthBar.Parent = healthBarBg
+    
+    -- TEXTO DE VIDA
+    local healthText = Instance.new("TextLabel")
+    healthText.Name = "HealthText"
+    healthText.Size = UDim2.new(1, 0, 1, 0)
+    healthText.BackgroundTransparency = 1
+    healthText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    healthText.TextSize = 12
+    healthText.Font = Enum.Font.GothamBold
+    healthText.Text = "0/100"
+    healthText.Parent = healthBarBg
+    
+    -- DISTÂNCIA
+    local distanceLabel = Instance.new("TextLabel")
+    distanceLabel.Name = "DistanceLabel"
+    distanceLabel.Size = UDim2.new(1, 0, 0.15, 0)
+    distanceLabel.Position = UDim2.new(0, 0, 1.05, 0)
+    distanceLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    distanceLabel.BackgroundTransparency = 0.5
+    distanceLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    distanceLabel.TextSize = 12
+    distanceLabel.Font = Enum.Font.Gotham
+    distanceLabel.Text = "0m"
+    distanceLabel.Parent = espContainer
+    
+    espContainer.Parent = targetPlayer.Character:FindFirstChild("Head")
+    
+    -- Atualizar informações
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if not targetPlayer.Character or not targetHumanoid or targetHumanoid.Health <= 0 then
+            espContainer:Destroy()
+            connection:Disconnect()
+            espPlayers[targetPlayer.Name] = nil
+            return
+        end
+        
+        -- Atualizar saúde
+        local maxHealth = targetHumanoid.MaxHealth
+        local currentHealth = targetHumanoid.Health
+        local healthPercent = currentHealth / maxHealth
+        
+        healthBar.Size = UDim2.new(healthPercent, 0, 1, 0)
+        healthText.Text = math.floor(currentHealth) .. "/" .. math.floor(maxHealth)
+        
+        -- Mudar cor da barra baseado na saúde
+        if healthPercent > 0.5 then
+            healthBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        elseif healthPercent > 0.25 then
+            healthBar.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
         else
-            bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+            healthBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        end
+        
+        -- Atualizar distância
+        local distance = (humanoidRootPart.Position - targetPlayer.Character.Head.Position).Magnitude
+        distanceLabel.Text = math.floor(distance) .. "m"
+        
+        -- Mudar cor da caixa baseado na distância
+        if distance < 50 then
+            boxFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+            nameLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        elseif distance < 100 then
+            boxFrame.BorderColor3 = Color3.fromRGB(255, 255, 0)
+            nameLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+        else
+            boxFrame.BorderColor3 = Color3.fromRGB(0, 255, 0)
+            nameLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+        end
+    end)
+    
+    espPlayers[targetPlayer.Name] = espContainer
+end
+
+-- ============================================
+-- GERENCIAR ESP PARA TODOS OS PLAYERS
+-- ============================================
+
+local function setupAllPlayers()
+    for _, targetPlayer in pairs(Players:GetPlayers()) do
+        if targetPlayer ~= player and not espPlayers[targetPlayer.Name] then
+            createESPBox(targetPlayer)
         end
     end
+end
+
+Players.PlayerAdded:Connect(function(newPlayer)
+    task.wait(0.5)
+    if CONFIG.espEnabled then
+        createESPBox(newPlayer)
+    end
 end)
 
--- Info
-local infoLabel = Instance.new("TextLabel")
-infoLabel.Size = UDim2.new(1, -20, 0, 60)
-infoLabel.Position = UDim2.new(0, 10, 0, 160)
-infoLabel.BackgroundTransparency = 1
-infoLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-infoLabel.TextSize = 11
-infoLabel.Font = Enum.Font.Gotham
-infoLabel.TextWrapped = true
-infoLabel.Text = "✓ Toque e arraste o título\n✓ Toque e arraste os botões\n✓ Pressione K para minimizar"
-infoLabel.Parent = mainFrame
+Players.PlayerRemoving:Connect(function(leftPlayer)
+    if espPlayers[leftPlayer.Name] then
+        espPlayers[leftPlayer.Name]:Destroy()
+        espPlayers[leftPlayer.Name] = nil
+    end
+end)
 
--- Atalho K
+setupAllPlayers()
+
+-- ============================================
+-- TOGGLE ESP
+-- ============================================
+
+local function toggleESP()
+    CONFIG.espEnabled = not CONFIG.espEnabled
+    
+    if CONFIG.espEnabled then
+        setupAllPlayers()
+        print("✓ ESP ATIVADO")
+    else
+        for name, esp in pairs(espPlayers) do
+            if esp then esp:Destroy() end
+        end
+        espPlayers = {}
+        print("✗ ESP DESATIVADO")
+    end
+end
+
+-- ============================================
+-- SISTEMA DE ARMA
+-- ============================================
+
+local function createBullet(origin, direction)
+    if CONFIG.currentAmmo <= 0 then
+        print("Sem munição!")
+        return
+    end
+    
+    if not canFire then return end
+    
+    CONFIG.currentAmmo = CONFIG.currentAmmo - 1
+    canFire = false
+    
+    -- Criar bala
+    local bullet = Instance.new("Part")
+    bullet.Shape = Enum.PartType.Ball
+    bullet.Material = Enum.Material.Metal
+    bullet.Size = Vector3.new(0.2, 0.2, 0.2)
+    bullet.CanCollide = false
+    bullet.CFrame = origin + direction * 5
+    bullet.TopSurface = Enum.SurfaceType.Smooth
+    bullet.BottomSurface = Enum.SurfaceType.Smooth
+    bullet.BrickColor = BrickColor.new("Really black")
+    
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.Velocity = direction * CONFIG.bulletSpeed
+    bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    bodyVelocity.Parent = bullet
+    
+    bullet.Parent = workspace
+    
+    -- Sistema de colisão
+    local function onBulletHit(hit)
+        if hit.Parent == character then return end
+        
+        local targetHumanoid = hit.Parent:FindFirstChild("Humanoid")
+        if targetHumanoid then
+            targetHumanoid:TakeDamage(CONFIG.bulletDamage)
+            print("💥 Acertou! Dano: " .. CONFIG.bulletDamage)
+        end
+        
+        bullet:Destroy()
+    end
+    
+    local connection
+    connection = bullet.Touched:Connect(function(hit)
+        onBulletHit(hit)
+        if connection then
+            connection:Disconnect()
+        end
+    end)
+    
+    game:GetService("Debris"):AddItem(bullet, 10)
+    
+    task.wait(CONFIG.fireRate)
+    canFire = true
+end
+
+-- ============================================
+-- SISTEMA DE MOVIMENTO
+-- ============================================
+
+local function updateMovement()
+    local moveDirection = Vector3.new(0, 0, 0)
+    
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+        moveDirection = moveDirection + (humanoidRootPart.CFrame.LookVector)
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+        moveDirection = moveDirection - (humanoidRootPart.CFrame.LookVector)
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+        moveDirection = moveDirection - (humanoidRootPart.CFrame.RightVector)
+    end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+        moveDirection = moveDirection + (humanoidRootPart.CFrame.RightVector)
+    end
+    
+    moveDirection = moveDirection.Unit
+    
+    if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+        isSprinting = true
+        humanoid.WalkSpeed = CONFIG.sprintSpeed
+    else
+        isSprinting = false
+        humanoid.WalkSpeed = CONFIG.moveSpeed
+    end
+    
+    humanoid:Move(moveDirection, false)
+end
+
+-- ============================================
+-- SISTEMA DE CÂMERA
+-- ============================================
+
+local lastMousePosition = mouse.Hit.Position
+local camX = 0
+local camY = 0
+
+local function updateCamera()
+    local mouseDelta = mouse.Hit.Position - lastMousePosition
+    lastMousePosition = mouse.Hit.Position
+    
+    camX = camX + mouseDelta.X * CONFIG.mouseSensitivity
+    camY = math.max(-89, math.min(89, camY - mouseDelta.Y * CONFIG.mouseSensitivity))
+    
+    local cameraRotation = CFrame.Angles(math.rad(camY), math.rad(camX), 0)
+    camera.CFrame = humanoidRootPart.CFrame + humanoidRootPart.CFrame.LookVector * 10 * cameraRotation
+    
+    humanoidRootPart.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, math.rad(-mouseDelta.X * CONFIG.mouseSensitivity), 0)
+end
+
+-- ============================================
+-- INPUTS
+-- ============================================
+
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.K then
-        isMinimized = not isMinimized
-        if isMinimized then
-            mainFrame.Size = UDim2.new(0, 300, 0, 40)
-            minimizeBtn.Text = "+"
-        else
-            mainFrame.Size = UDim2.new(0, 300, 0, 260)
-            minimizeBtn.Text = "−"
+    
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        mouseDown = true
+        while mouseDown and canFire do
+            createBullet(camera.CFrame.Position, camera.CFrame.LookVector)
+            task.wait(CONFIG.fireRate)
         end
+    end
+    
+    if input.KeyCode == Enum.KeyCode.Space then
+        humanoid:Jump()
+    end
+    
+    if input.KeyCode == Enum.KeyCode.R then
+        CONFIG.currentAmmo = CONFIG.maxAmmo
+        print("🔫 Munição recarregada!")
+    end
+    
+    -- TOGGLE ESP
+    if input.KeyCode == Enum.KeyCode.E then
+        toggleESP()
     end
 end)
 
-print("✅ MT SCRIPT CARREGADO!")
-print("👆 Toque e arraste para aumentar!")
+UserInputService.InputEnded:Connect(function(input, gameProcessed)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        mouseDown = false
+    end
+end)
+
+-- ============================================
+-- LOOP PRINCIPAL
+-- ============================================
+
+RunService.RenderStepped:Connect(function()
+    if character and humanoid.Health > 0 then
+        updateMovement()
+        updateCamera()
+    end
+end)
+
+-- ============================================
+-- RESPAWN
+-- ============================================
+
+humanoid.Died:Connect(function()
+    player:LoadCharacter()
+end)
+
+-- ============================================
+-- MENU DE INFORMAÇÕES
+-- ============================================
+
+print("\n========================================")
+print("✓ Script FPS com ESP carregado!")
+print("========================================")
+print("\n🎮 CONTROLES:")
+print("  W/A/S/D - Mover")
+print("  SHIFT - Correr")
+print("  SPACE - Pular")
+print("  MOUSE - Mirar")
+print("  CLICK - Atirar")
+print("  R - Recarregar")
+print("  E - Toggle ESP (Visão através de paredes)")
+print("\n📊 INFORMAÇÕES DO ESP:")
+print("  Verde - Longe (>100m)")
+print("  Amarelo - Médio (50-100m)")
+print("  Vermelho - Perto (<50m)")
+print("  Barra verde/amarela/vermelha = Vida do inimigo")
+print("========================================\n")
