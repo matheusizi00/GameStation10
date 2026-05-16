@@ -10,6 +10,8 @@ local rootPart = character:WaitForChild("HumanoidRootPart")
 local speedMultiplier = 1
 local jumpMultiplier = 1
 local isMinimized = false
+local dragSpeed = false
+local dragJump = false
 
 -- BodyVelocity
 local bodyVelocity = Instance.new("BodyVelocity")
@@ -30,30 +32,30 @@ mainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
 mainFrame.BorderSizePixel = 3
 mainFrame.Parent = screenGui
 
--- Permitir arrastar
-local dragging = false
-local dragInput
-local dragStart
-local startPos
+-- Permitir arrastar painel
+local panelDragging = false
+local panelDragInput
+local panelDragStart
+local panelStartPos
 
 mainFrame.InputBegan:Connect(function(input, gameProcessed)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = mainFrame.Position
+        panelDragging = true
+        panelDragStart = input.Position
+        panelStartPos = mainFrame.Position
     end
 end)
 
 mainFrame.InputEnded:Connect(function(input, gameProcessed)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
+        panelDragging = false
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input, gameProcessed)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    if panelDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - panelDragStart
+        mainFrame.Position = UDim2.new(panelStartPos.X.Scale, panelStartPos.X.Offset + delta.X, panelStartPos.Y.Scale, panelStartPos.Y.Offset + delta.Y)
     end
 end)
 
@@ -101,7 +103,7 @@ speedLabel.TextXAlignment = Enum.TextXAlignment.Left
 speedLabel.Text = "🚀 Velocidade: 1.0x"
 speedLabel.Parent = mainFrame
 
--- Slider Velocidade
+-- Slider Velocidade (Background)
 local speedSlider = Instance.new("Frame")
 speedSlider.Size = UDim2.new(0, 280, 0, 10)
 speedSlider.Position = UDim2.new(0, 10, 0, 65)
@@ -110,20 +112,34 @@ speedSlider.BorderColor3 = Color3.fromRGB(255, 0, 0)
 speedSlider.BorderSizePixel = 1
 speedSlider.Parent = mainFrame
 
+-- Barra de Velocidade (Fill)
 local speedFill = Instance.new("Frame")
 speedFill.Size = UDim2.new(0, 0, 1, 0)
 speedFill.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 speedFill.BorderSizePixel = 0
 speedFill.Parent = speedSlider
 
-speedSlider.MouseButton1Down:Connect(function()
-    local mousePos = UserInputService:GetMouseLocation().X
-    local sliderPos = speedSlider.AbsolutePosition.X
-    local sliderSize = speedSlider.AbsoluteSize.X
-    local percent = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
-    speedMultiplier = 1 + (percent * 5)
-    speedFill.Size = UDim2.new(percent, 0, 1, 0)
-    speedLabel.Text = "🚀 Velocidade: " .. string.format("%.1f", speedMultiplier) .. "x"
+-- Botão do Slider de Velocidade
+local speedButton = Instance.new("TextButton")
+speedButton.Size = UDim2.new(0, 15, 0, 15)
+speedButton.Position = UDim2.new(0, -7, 0.5, -7)
+speedButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+speedButton.BorderSizePixel = 2
+speedButton.BorderColor3 = Color3.fromRGB(255, 255, 255)
+speedButton.Text = ""
+speedButton.Parent = speedSlider
+speedButton.ZIndex = 2
+
+-- Evento Velocidade
+speedButton.MouseButton1Down:Connect(function()
+    dragSpeed = true
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragSpeed = false
+        dragJump = false
+    end
 end)
 
 -- Label Pulo
@@ -138,7 +154,7 @@ jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
 jumpLabel.Text = "⬆️ Pulo: 1.0x"
 jumpLabel.Parent = mainFrame
 
--- Slider Pulo
+-- Slider Pulo (Background)
 local jumpSlider = Instance.new("Frame")
 jumpSlider.Size = UDim2.new(0, 280, 0, 10)
 jumpSlider.Position = UDim2.new(0, 10, 0, 115)
@@ -147,20 +163,56 @@ jumpSlider.BorderColor3 = Color3.fromRGB(255, 0, 0)
 jumpSlider.BorderSizePixel = 1
 jumpSlider.Parent = mainFrame
 
+-- Barra de Pulo (Fill)
 local jumpFill = Instance.new("Frame")
 jumpFill.Size = UDim2.new(0, 0, 1, 0)
 jumpFill.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 jumpFill.BorderSizePixel = 0
 jumpFill.Parent = jumpSlider
 
-jumpSlider.MouseButton1Down:Connect(function()
-    local mousePos = UserInputService:GetMouseLocation().X
-    local sliderPos = jumpSlider.AbsolutePosition.X
-    local sliderSize = jumpSlider.AbsoluteSize.X
-    local percent = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
-    jumpMultiplier = 1 + (percent * 4)
-    jumpFill.Size = UDim2.new(percent, 0, 1, 0)
-    jumpLabel.Text = "⬆️ Pulo: " .. string.format("%.1f", jumpMultiplier) .. "x"
+-- Botão do Slider de Pulo
+local jumpButton = Instance.new("TextButton")
+jumpButton.Size = UDim2.new(0, 15, 0, 15)
+jumpButton.Position = UDim2.new(0, -7, 0.5, -7)
+jumpButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+jumpButton.BorderSizePixel = 2
+jumpButton.BorderColor3 = Color3.fromRGB(255, 255, 255)
+jumpButton.Text = ""
+jumpButton.Parent = jumpSlider
+jumpButton.ZIndex = 2
+
+-- Evento Pulo
+jumpButton.MouseButton1Down:Connect(function()
+    dragJump = true
+end)
+
+-- Update Sliders no Mouse Move
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        if dragSpeed then
+            local mousePos = UserInputService:GetMouseLocation().X
+            local sliderPos = speedSlider.AbsolutePosition.X
+            local sliderSize = speedSlider.AbsoluteSize.X
+            local percent = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
+            
+            speedMultiplier = 1 + (percent * 5)
+            speedButton.Position = UDim2.new(percent, -7, 0.5, -7)
+            speedFill.Size = UDim2.new(percent, 0, 1, 0)
+            speedLabel.Text = "🚀 Velocidade: " .. string.format("%.1f", speedMultiplier) .. "x"
+        end
+        
+        if dragJump then
+            local mousePos = UserInputService:GetMouseLocation().X
+            local sliderPos = jumpSlider.AbsolutePosition.X
+            local sliderSize = jumpSlider.AbsoluteSize.X
+            local percent = math.clamp((mousePos - sliderPos) / sliderSize, 0, 1)
+            
+            jumpMultiplier = 1 + (percent * 4)
+            jumpButton.Position = UDim2.new(percent, -7, 0.5, -7)
+            jumpFill.Size = UDim2.new(percent, 0, 1, 0)
+            jumpLabel.Text = "⬆️ Pulo: " .. string.format("%.1f", jumpMultiplier) .. "x"
+        end
+    end
 end)
 
 -- Info
