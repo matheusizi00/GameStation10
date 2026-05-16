@@ -1,104 +1,239 @@
+-- MT SCRIPT v2
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local humanoid = character:WaitForChild("Humanoid")
+local rootPart = character:WaitForChild("HumanoidRootPart")
 
--- Variáveis de Controle
-local settings = {
-    jumpEnabled = false,
-    speedEnabled = false,
-    espEnabled = false,
-    jumpPower = 50,
-    speedMultiplier = 16,
-    panelOpen = true
-}
+-- Variáveis de controle
+local pulo = 50
+local velocidade = 16
+local espAtivo = false
+local menuAberto = true
 
-local espMarkers = {}
-
--- Criar GUI Principal
+-- Criar GUI
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "MT_SCRIPT_GUI"
+screenGui.Name = "MTScriptGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Frame Principal
-local mainFrame = Instance.new("Frame")
-mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 300, 0, 400)
-mainFrame.Position = UDim2.new(0, 10, 0, 10)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-mainFrame.BorderSizePixel = 0
-mainFrame.Parent = screenGui
+-- Painel Principal
+local painel = Instance.new("Frame")
+painel.Name = "Painel"
+painel.Size = UDim2.new(0, 250, 0, 300)
+painel.Position = UDim2.new(0, 10, 0, 10)
+painel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+painel.BorderSizePixel = 0
+painel.Parent = screenGui
 
 -- Título
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Name = "Title"
-titleLabel.Size = UDim2.new(1, 0, 0, 40)
-titleLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-titleLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-titleLabel.TextSize = 16
-titleLabel.Font = Enum.Font.GothamBold
-titleLabel.Text = "🔴 MT SCRIPT"
-titleLabel.BorderSizePixel = 0
-titleLabel.Parent = mainFrame
+local titulo = Instance.new("TextLabel")
+titulo.Name = "Titulo"
+titulo.Size = UDim2.new(1, 0, 0, 35)
+titulo.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+titulo.TextColor3 = Color3.fromRGB(255, 0, 0)
+titulo.TextSize = 18
+titulo.Font = Enum.Font.GothamBold
+titulo.Text = "MT SCRIPT"
+titulo.BorderSizePixel = 0
+titulo.Parent = painel
 
--- Botão Fechar/Abrir
-local toggleButton = Instance.new("TextButton")
-toggleButton.Name = "ToggleBtn"
-toggleButton.Size = UDim2.new(0, 30, 0, 40)
-toggleButton.Position = UDim2.new(1, -35, 0, 0)
-toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleButton.TextSize = 18
-toggleButton.Font = Enum.Font.GothamBold
-toggleButton.Text = "-"
-toggleButton.BorderSizePixel = 0
-toggleButton.Parent = mainFrame
+-- Botão Fechar
+local btnFechar = Instance.new("TextButton")
+btnFechar.Name = "BtnFechar"
+btnFechar.Size = UDim2.new(0, 30, 0, 35)
+btnFechar.Position = UDim2.new(1, -35, 0, 0)
+btnFechar.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+btnFechar.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnFechar.TextSize = 16
+btnFechar.Font = Enum.Font.GothamBold
+btnFechar.Text = "-"
+btnFechar.BorderSizePixel = 0
+btnFechar.Parent = painel
 
--- ScrollFrame
-local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Name = "ScrollFrame"
-scrollFrame.Size = UDim2.new(1, -10, 1, -50)
-scrollFrame.Position = UDim2.new(0, 5, 0, 45)
-scrollFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-scrollFrame.BorderSizePixel = 0
-scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 600)
-scrollFrame.Parent = mainFrame
+-- ScrollingFrame
+local scroll = Instance.new("ScrollingFrame")
+scroll.Name = "Scroll"
+scroll.Size = UDim2.new(1, 0, 1, -35)
+scroll.Position = UDim2.new(0, 0, 0, 35)
+scroll.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+scroll.BorderSizePixel = 0
+scroll.ScrollBarThickness = 8
+scroll.Parent = painel
 
--- Função para criar botões ON/OFF
-local function createToggleButton(parent, name, y, callback)
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 50)
-    container.Position = UDim2.new(0, 0, 0, y)
-    container.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    container.BorderSizePixel = 0
-    container.Parent = parent
-    
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.6, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextSize = 14
-    label.Font = Enum.Font.Gotham
-    label.Text = name
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = container
-    
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.35, -5, 0.8, 0)
-    button.Position = UDim2.new(0.6, 5, 0.1, 0)
-    button.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 12
-    button.Font = Enum.Font.GothamBold
-    button.Text = "OFF"
-    button.BorderSizePixel = 0
-    button.Parent = container
+-- Label Super Pulo
+local labelPulo = Instance.new("TextLabel")
+labelPulo.Size = UDim2.new(1, 0, 0, 25)
+labelPulo.Position = UDim2.new(0, 10, 0, 10)
+labelPulo.BackgroundTransparency = 1
+labelPulo.TextColor3 = Color3.fromRGB(255, 255, 255)
+labelPulo.TextSize = 14
+labelPulo.Font = Enum.Font.Gotham
+labelPulo.Text = "Super Pulo: " .. pulo
+labelPulo.Parent = scroll
+
+-- Slider Pulo
+local sliderPulo = Instance.new("TextButton")
+sliderPulo.Name = "SliderPulo"
+sliderPulo.Size = UDim2.new(0, 200, 0, 15)
+sliderPulo.Position = UDim2.new(0, 10, 0, 40)
+sliderPulo.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+sliderPulo.BorderSizePixel = 0
+sliderPulo.Text = ""
+sliderPulo.Parent = scroll
+
+local sliderPuloFill = Instance.new("Frame")
+sliderPuloFill.Name = "Fill"
+sliderPuloFill.Size = UDim2.new((pulo - 50) / 150, 0, 1, 0)
+sliderPuloFill.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+sliderPuloFill.BorderSizePixel = 0
+sliderPuloFill.Parent = sliderPulo
+
+-- Label Super Velocidade
+local labelVel = Instance.new("TextLabel")
+labelVel.Size = UDim2.new(1, 0, 0, 25)
+labelVel.Position = UDim2.new(0, 10, 0, 65)
+labelVel.BackgroundTransparency = 1
+labelVel.TextColor3 = Color3.fromRGB(255, 255, 255)
+labelVel.TextSize = 14
+labelVel.Font = Enum.Font.Gotham
+labelVel.Text = "Super Velocidade: " .. velocidade
+labelVel.Parent = scroll
+
+-- Slider Velocidade
+local sliderVel = Instance.new("TextButton")
+sliderVel.Name = "SliderVel"
+sliderVel.Size = UDim2.new(0, 200, 0, 15)
+sliderVel.Position = UDim2.new(0, 10, 0, 95)
+sliderVel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+sliderVel.BorderSizePixel = 0
+sliderVel.Text = ""
+sliderVel.Parent = scroll
+
+local sliderVelFill = Instance.new("Frame")
+sliderVelFill.Name = "Fill"
+sliderVelFill.Size = UDim2.new((velocidade - 16) / 84, 0, 1, 0)
+sliderVelFill.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+sliderVelFill.BorderSizePixel = 0
+sliderVelFill.Parent = sliderVel
+
+-- Botão ESP
+local btnESP = Instance.new("TextButton")
+btnESP.Name = "BtnESP"
+btnESP.Size = UDim2.new(0, 200, 0, 35)
+btnESP.Position = UDim2.new(0, 10, 0, 120)
+btnESP.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+btnESP.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnESP.TextSize = 14
+btnESP.Font = Enum.Font.GothamBold
+btnESP.Text = "ESP: OFF"
+btnESP.BorderSizePixel = 0
+btnESP.Parent = scroll
+
+-- Atualizar tamanho do scroll
+scroll.CanvasSize = UDim2.new(0, 0, 0, 170)
+
+-- Função para criar ESP
+local function criarESP(p)
+	if p == player then return end
+	if p:FindFirstChild("ESP") then return end
+	
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "ESP"
+	billboard.Size = UDim2.new(4, 0, 5, 0)
+	billboard.MaxDistance = 500
+	billboard.Parent = p:FindFirstChild("Head") or p.Character:FindFirstChildOfClass("Model")
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+	label.BackgroundTransparency = 0.3
+	label.TextColor3 = Color3.fromRGB(255, 0, 0)
+	label.TextSize = 14
+	label.Font = Enum.Font.GothamBold
+	label.Text = p.Name
+	label.BorderSizePixel = 0
+	label.Parent = billboard
+end
+
+-- Função para remover ESP
+local function removerESP(p)
+	if p:FindFirstChild("ESP") then
+		p:FindFirstChild("ESP"):Destroy()
+	end
+end
+
+-- Controlar ESP
+btnESP.MouseButton1Click:Connect(function()
+	espAtivo = not espAtivo
+	btnESP.BackgroundColor3 = espAtivo and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(100, 0, 0)
+	btnESP.Text = espAtivo and "ESP: ON" or "ESP: OFF"
+	
+	if espAtivo then
+		for _, p in pairs(Players:GetPlayers()) do
+			criarESP(p)
+		end
+	else
+		for _, p in pairs(Players:GetPlayers()) do
+			removerESP(p)
+		end
+	end
+end)
+
+-- Evento de novos jogadores
+Players.PlayerAdded:Connect(function(p)
+	if espAtivo then
+		p.CharacterAdded:Connect(function()
+			wait(0.5)
+			criarESP(p)
+		end)
+	end
+end)
+
+-- Controlar Pulo com Slider
+sliderPulo.MouseButton1Click:Connect(function(x, y)
+	local tamanho = sliderPulo.AbsoluteSize.X
+	local clique = x - sliderPulo.AbsolutePosition.X
+	pulo = math.max(50, math.min(200, 50 + (clique / tamanho) * 150))
+	sliderPuloFill.Size = UDim2.new((pulo - 50) / 150, 0, 1, 0)
+	labelPulo.Text = "Super Pulo: " .. math.floor(pulo)
+end)
+
+-- Controlar Velocidade com Slider
+sliderVel.MouseButton1Click:Connect(function(x, y)
+	local tamanho = sliderVel.AbsoluteSize.X
+	local clique = x - sliderVel.AbsolutePosition.X
+	velocidade = math.max(16, math.min(100, 16 + (clique / tamanho) * 84))
+	sliderVelFill.Size = UDim2.new((velocidade - 16) / 84, 0, 1, 0)
+	labelVel.Text = "Super Velocidade: " .. math.floor(velocidade)
+end)
+
+-- Botão Fechar
+btnFechar.MouseButton1Click:Connect(function()
+	menuAberto = not menuAberto
+	painel.Visible = menuAberto
+	btnFechar.Text = menuAberto and "-" or "+"
+end)
+
+-- Aplicar modificações em tempo real
+RunService.RenderStepped:Connect(function()
+	if character and humanoid then
+		humanoid.JumpPower = pulo
+		humanoid.WalkSpeed = velocidade
+	end
+end)
+
+-- Recriar ao respawn
+player.CharacterAdded:Connect(function(newChar)
+	character = newChar
+	humanoid = character:WaitForChild("Humanoid")
+	rootPart = character:WaitForChild("HumanoidRootPart")
+end)
+
+print("MT SCRIPT Carregado com sucesso!")    button.Parent = container
     
     button.MouseButton1Click:Connect(function()
         callback(button)
